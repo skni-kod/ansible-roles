@@ -1,0 +1,63 @@
+# K8S CLUSTER INIT (MASTER)
+
+- name: Init cluster by kubeadm
+  ansible.builtin.command: >
+    kubeadm init
+    --apiserver-advertise-address={{ ansible_host }}
+    --pod-network-cidr=10.244.0.0/16
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- name: Create .kube directory
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Copy config file (admin.conf) to user directory
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+
+- name: Install Tigera (Calico)
+  ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: tigera_install
+  changed_when: "'created' in tigera_install.stdout or 'configured' in tigera_install.stdout"
+
+- name: Download Calico custom-resources
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
+    dest: "/home/{{ ansible_user }}/custom-resources.yaml"
+    mode: "0644"
+
+- name: Modify Calico custom-resources (CIDR)
+  ansible.builtin.replace:
+    path: "/home/{{ ansible_user }}/custom-resources.yaml"
+    regexp: '192\.168\.0\.0/16'
+    replace: "10.244.0.0/16"
+
+- name: Apply Calico custom-resources
+  ansible.builtin.command: kubectl apply -f custom-resources.yaml
+  args:
+    chdir: "/home/{{ ansible_user }}"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: calico_apply
+  changed_when: "'created' in calico_apply.stdout or 'configured' in calico_apply.stdout"
+
+- name: Generate join command for worker nodes
+  ansible.builtin.command: kubeadm token create --print-join-command
+  register: kubeadm_join_cmd
+  changed_when: false
+
+- name: Set join_command variable
+  ansible.builtin.set_fact:
+    join_command: "{{ kubeadm_join_cmd.stdout }}"
