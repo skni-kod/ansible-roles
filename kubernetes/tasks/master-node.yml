@@ -26,21 +26,32 @@
     mode: "0600"
 
 - name: Install Tigera (Calico)
-  ansible.builtin.command: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
+  ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  ignore_errors: true
+  register: tigera_install
+  changed_when: "'created' in tigera_install.stdout or 'configured' in tigera_install.stdout"
 
-- name: Download and modify Calico custom-resources (CIDR)
-  ansible.builtin.shell: |
-    curl -O https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
-    sed -i 's/192.168.0.0\/16/10.244.0.0\/16/g' custom-resources.yaml
-    kubectl create -f custom-resources.yaml
+- name: Download Calico custom-resources
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
+    dest: "/home/{{ ansible_user }}/custom-resources.yaml"
+    mode: "0644"
+
+- name: Modify Calico custom-resources (CIDR)
+  ansible.builtin.replace:
+    path: "/home/{{ ansible_user }}/custom-resources.yaml"
+    regexp: '192\.168\.0\.0/16'
+    replace: "10.244.0.0/16"
+
+- name: Apply Calico custom-resources
+  ansible.builtin.command: kubectl apply -f custom-resources.yaml
   args:
     chdir: "/home/{{ ansible_user }}"
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  ignore_errors: true
+  register: calico_apply
+  changed_when: "'created' in calico_apply.stdout or 'configured' in calico_apply.stdout"
 
 - name: Generate join command for worker nodes
   ansible.builtin.command: kubeadm token create --print-join-command
