@@ -1,0 +1,23 @@
+- name: Wait for SSH connection
+  ansible.builtin.wait_for_connection:
+    delay: 5
+    sleep: 5
+    timeout: 600
+
+- name: Wait for automatic system updates to finish (dpkg lock)
+  ansible.builtin.shell: |
+    while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+      sleep 5;
+    done
+  changed_when: false
+
+- name: Install qemu-guest-agent and basic tools
+  ansible.builtin.apt:
+    name:
+      - qemu-guest-agent
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+    state: present
+    update_cache: true
