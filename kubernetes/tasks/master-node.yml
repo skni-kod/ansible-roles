@@ -26,7 +26,9 @@
     mode: "0600"
 
 - name: Install Tigera (Calico)
-  ansible.builtin.command: kubectl apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
+  ansible.builtin.command: >
+    kubectl apply --server-side --force-conflicts
+    -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   register: tigera_install
