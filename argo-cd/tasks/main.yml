@@ -1,0 +1,16 @@
+# ARGO-CD ROLE
+
+- name: Create ArgoCD namespace
+  ansible.builtin.command: kubectl create namespace argocd
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: create_argocd_ns
+  changed_when: "create_argocd_ns.rc == 0"
+  failed_when: "create_argocd_ns.rc != 0 and 'AlreadyExists' not in create_argocd_ns.stderr"
+
+- name: Install ArgoCD resources
+  ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: install_argocd
+  changed_when: "'created' in install_argocd.stdout or 'configured' in install_argocd.stdout"
