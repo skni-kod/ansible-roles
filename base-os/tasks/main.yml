@@ -4,6 +4,9 @@
     sleep: 5
     timeout: 600
 
+- name: Gather facts manually after connection
+  ansible.builtin.setup:
+
 - name: Wait for automatic system updates to finish (dpkg lock)
   ansible.builtin.shell: |
     while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
