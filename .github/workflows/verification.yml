@@ -23,4 +23,4 @@ jobs:
           pip install --ignore-installed ansible ansible-lint
 
       - name: Run ansible-lint
-        run: ansible-lint .
+        run: ansible-lint */

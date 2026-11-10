@@ -60,4 +60,4 @@
 
 - name: Set join_command variable
   ansible.builtin.set_fact:
-    join_command: "{{ kubernetes_kubeadm_join_cmd.stdout }}"
+    kubernetes_join_command: "{{ kubernetes_kubeadm_join_cmd.stdout }}"
