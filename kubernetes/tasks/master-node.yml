@@ -29,8 +29,8 @@
   ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  register: tigera_install
-  changed_when: "'created' in tigera_install.stdout or 'configured' in tigera_install.stdout"
+  register: kubernetes_tigera_install
+  changed_when: "'created' in kubernetes_tigera_install.stdout or 'configured' in kubernetes_tigera_install.stdout"
 
 - name: Download Calico custom-resources
   ansible.builtin.get_url:
@@ -50,14 +50,14 @@
     chdir: "/home/{{ ansible_user }}"
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  register: calico_apply
-  changed_when: "'created' in calico_apply.stdout or 'configured' in calico_apply.stdout"
+  register: kubernetes_calico_apply
+  changed_when: "'created' in kubernetes_calico_apply.stdout or 'configured' in kubernetes_calico_apply.stdout"
 
 - name: Generate join command for worker nodes
   ansible.builtin.command: kubeadm token create --print-join-command
-  register: kubeadm_join_cmd
+  register: kubernetes_kubeadm_join_cmd
   changed_when: false
 
 - name: Set join_command variable
   ansible.builtin.set_fact:
-    join_command: "{{ kubeadm_join_cmd.stdout }}"
+    join_command: "{{ kubernetes_kubeadm_join_cmd.stdout }}"
