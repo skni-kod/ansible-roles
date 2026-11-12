@@ -1,5 +1,12 @@
 # ARGO-CD ROLE
 
+- name: Install ArgoCD CLI
+  become: true
+  ansible.builtin.get_url:
+    url: "https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64"
+    dest: /usr/local/bin/argocd
+    mode: "0755"
+
 - name: Create ArgoCD namespace
   ansible.builtin.command: kubectl create namespace argocd
   environment:
@@ -9,7 +16,11 @@
   failed_when: "argo_cd_create_ns.rc != 0 and 'AlreadyExists' not in argo_cd_create_ns.stderr"
 
 - name: Install ArgoCD resources
-  ansible.builtin.command: kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  ansible.builtin.command: >
+    kubectl apply -n argocd
+    --server-side
+    --force-conflicts
+    -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   environment:
     KUBECONFIG: /home/{{ ansible_user }}/.kube/config
   register: argo_cd_install
