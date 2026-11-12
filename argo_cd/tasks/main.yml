@@ -4,13 +4,13 @@
   ansible.builtin.command: kubectl create namespace argocd
   environment:
     KUBECONFIG: /home/{{ ansible_user }}/.kube/config
-  register: create_argocd_ns
-  changed_when: "create_argocd_ns.rc == 0"
-  failed_when: "create_argocd_ns.rc != 0 and 'AlreadyExists' not in create_argocd_ns.stderr"
+  register: argo_cd_create_ns
+  changed_when: "argo_cd_create_ns.rc == 0"
+  failed_when: "argo_cd_create_ns.rc != 0 and 'AlreadyExists' not in argo_cd_create_ns.stderr"
 
 - name: Install ArgoCD resources
   ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   environment:
     KUBECONFIG: /home/{{ ansible_user }}/.kube/config
-  register: install_argocd
-  changed_when: "'created' in install_argocd.stdout or 'configured' in install_argocd.stdout"
+  register: argo_cd_install
+  changed_when: "'created' in argo_cd_install.stdout or 'configured' in argo_cd_install.stdout"
