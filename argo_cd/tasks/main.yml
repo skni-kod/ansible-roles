@@ -9,7 +9,7 @@
   failed_when: "argo_cd_create_ns.rc != 0 and 'AlreadyExists' not in argo_cd_create_ns.stderr"
 
 - name: Install ArgoCD resources
-  ansible.builtin.command: kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  ansible.builtin.command: kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   environment:
     KUBECONFIG: /home/{{ ansible_user }}/.kube/config
   register: argo_cd_install
