@@ -1,0 +1,14 @@
+galaxy_info:
+  author: mazurw
+  description: Docker CE installation and daemon configuration for Ubuntu
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - docker
+    - ubuntu
+
+dependencies: []
